@@ -1,4 +1,3 @@
-
 /* =========================
    1. DESIGN TOKENS
 ========================= */
@@ -25,32 +24,40 @@
 }
 
 /* =========================
-   2. BASE
+   2. BASE (FIXED)
 ========================= */
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
+
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  justify-content: center;
-  align-items: center;
+
   background: var(--bg);
   color: var(--text);
+
   overflow: hidden;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* =========================
-   3. APP CONTAINER
+   3. APP ROOT FIX
 ========================= */
 #app {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* =========================
@@ -59,12 +66,13 @@ html, body {
 .layer {
   position: absolute;
   inset: 0;
+
   display: flex;
   justify-content: center;
   align-items: center;
 
   opacity: 0;
-  transform: translateY(10px) scale(0.98);
+  transform: translateY(12px) scale(0.98);
   transition: all 0.45s var(--ease);
 
   pointer-events: none;
@@ -105,51 +113,57 @@ html, body {
 }
 
 /* =========================
-   6. LOGIN (iOS GLASS)
+   6. LOGIN (IMPROVED iOS STYLE)
 ========================= */
 .auth-container {
   width: 100%;
   display: flex;
   justify-content: center;
+  padding: 20px;
 }
 
 .auth-card {
-  width: 340px;
-  padding: 26px;
+  width: 100%;
+  max-width: 340px;
+
+  padding: 28px;
   border-radius: var(--radius-lg);
 
   background: var(--card);
-  backdrop-filter: blur(22px);
+  backdrop-filter: blur(24px);
 
   box-shadow: var(--shadow);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .auth-card .title {
   font-size: 22px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .auth-card input {
   width: 100%;
-  padding: 12px 14px;
-  margin-top: 10px;
+  padding: 14px 16px;
 
-  border: none;
-  outline: none;
-  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
 
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
   color: var(--text);
+
+  outline: none;
 }
 
 .auth-card button {
   width: 100%;
-  margin-top: 14px;
-  padding: 12px;
+  padding: 14px;
 
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
 
   background: var(--blue);
   color: white;
@@ -165,18 +179,21 @@ html, body {
 }
 
 .hint {
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: 12px;
   color: var(--muted);
   text-align: center;
 }
 
 /* =========================
-   7. DASHBOARD
+   7. DASHBOARD FIXED SCROLL STRUCTURE
 ========================= */
 #dashboard-layer {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
   flex-direction: column;
-  align-items: stretch;
 }
 
 /* TOP BAR */
@@ -198,17 +215,19 @@ html, body {
   background: transparent;
   color: var(--muted);
   font-size: 13px;
-  cursor: pointer;
 }
 
-/* CONTENT */
+/* CONTENT (FIXED SCROLL CORE) */
 .content {
-  padding: 12px 16px;
+  flex: 1;
   overflow-y: auto;
+  padding: 12px 16px;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 /* =========================
-   8. CARD SYSTEM
+   8. CARDS
 ========================= */
 .course {
   margin-top: 18px;
@@ -224,6 +243,7 @@ html, body {
   margin-bottom: 10px;
 
   backdrop-filter: blur(18px);
+
   transition: transform 0.2s var(--ease);
 }
 
@@ -249,7 +269,7 @@ html, body {
 }
 
 /* =========================
-   9. STATE SYSTEM (핵심)
+   9. STATUS COLORS
 ========================= */
 .status.green { color: var(--green); }
 .status.orange { color: var(--orange); }
@@ -257,24 +277,14 @@ html, body {
 .status.red { color: var(--red); }
 
 /* =========================
-   10. MODAL / TOAST
-========================= */
-#modal-layer,
-#toast-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-/* =========================
-   11. SCROLLBAR (iOS 느낌)
+   10. SCROLL FIX
 ========================= */
 .content::-webkit-scrollbar {
   display: none;
 }
 
 /* =========================
-   12. MICRO INTERACTIONS
+   11. BUTTON GLOBAL FIX
 ========================= */
 button {
   transition: all 0.2s var(--ease);
