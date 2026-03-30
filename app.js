@@ -223,7 +223,6 @@ const UI = {
 
   renderDashboard(data) {
     const view = document.getElementById("app-view");
-
     if (!view) return;
 
     this.show(this.dashboardLayer);
@@ -231,7 +230,10 @@ const UI = {
     let html = "";
 
     data.forEach(course => {
-      html += `<div class="course">${course.courseName}</div>`;
+      html += `
+        <div class="course-block">
+          <div class="course-title">${course.courseName}</div>
+      `;
 
       course.assignments.forEach(a => {
         const s = Logic.calcStatus(a.deadline);
@@ -244,6 +246,8 @@ const UI = {
           </div>
         `;
       });
+
+      html += `</div>`;
     });
 
     view.innerHTML = html;
