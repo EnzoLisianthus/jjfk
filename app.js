@@ -194,6 +194,13 @@ const UI = {
   },
 
   renderDashboard(data) {
+    const view = document.getElementById("app-view");
+
+    if (!view) {
+      console.error("❌ app-view not found");
+      return;
+    }
+
     this.show(this.dashboardLayer);
 
     let html = "";
@@ -207,18 +214,14 @@ const UI = {
         html += `
           <div class="assignment-card">
             <div class="title">${a.title}</div>
-            <div class="deadline">
-              ${new Date(a.deadline).toLocaleString()}
-            </div>
-            <div class="status ${s.color}">
-              ${s.text}
-            </div>
+            <div class="deadline">${new Date(a.deadline).toLocaleString()}</div>
+            <div class="status ${s.color}">${s.text}</div>
           </div>
         `;
       });
     });
 
-    this.content.innerHTML = html;
+    view.innerHTML = html;
   }
 };
 
