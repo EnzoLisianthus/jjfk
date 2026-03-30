@@ -160,7 +160,15 @@ const UI = {
   content: document.getElementById("content"),
 
   show(layer) {
-    document.querySelectorAll(".layer").forEach(l => l.classList.remove("active"));
+    if (!layer) {
+      console.error("layer 없음");
+      return;
+    }
+
+    document.querySelectorAll(".layer").forEach(l => {
+      l.classList.remove("active");
+    });
+
     layer.classList.add("active");
   },
 
