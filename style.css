@@ -258,7 +258,7 @@ html, body {
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 10px;
-  width: 90%;
+  width: 100%;
   backdrop-filter: blur(18px);
   box-sizing: border-box;
   transition: transform 0.2s var(--ease);
