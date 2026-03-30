@@ -2,38 +2,51 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <!-- =========================
+       MOBILE OPTIMIZATION (핵심)
+  ========================== -->
+  <meta name="viewport"
+        content="width=device-width,
+                 initial-scale=1,
+                 maximum-scale=1,
+                 user-scalable=no,
+                 viewport-fit=cover">
+
+  <meta name="theme-color" content="#0b0f1a" />
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Assignment Hub" />
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0b0f1a" />
-
-  <!-- iOS Web App -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <title>Assignment Hub</title>
 
-  <!-- CSS 분리 -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
+<!-- =========================
+     APP ROOT
+========================== -->
 <div id="app">
 
   <!-- =========================
-       LOADING LAYER
+       LOADING
   ========================== -->
   <section id="loading-layer" class="layer active">
     <div class="center">
       <div class="spinner"></div>
-      <div class="text">Loading...</div>
+      <div class="text">Loading</div>
     </div>
   </section>
 
   <!-- =========================
-       LOGIN LAYER
+       LOGIN
   ========================== -->
   <section id="login-layer" class="layer">
 
@@ -41,15 +54,20 @@
 
       <div class="auth-card">
 
-        <div class="title">Sign In</div>
+        <div class="auth-header">
+          <div class="auth-title">Welcome</div>
+          <div class="auth-subtitle">Assignment Hub</div>
+        </div>
 
-        <input id="login-id" type="text" placeholder="Student ID" />
-        <input id="login-pw" type="password" placeholder="Password" />
+        <div class="auth-form">
+          <input id="login-id" type="text" placeholder="Student ID" />
+          <input id="login-pw" type="password" placeholder="Password" />
+        </div>
 
-        <button id="login-btn">Login</button>
+        <button id="login-btn" class="primary-btn">Login</button>
 
-        <div class="hint">
-          Cyber Campus Assignment System
+        <div class="auth-hint">
+          Cyber Campus System
         </div>
 
       </div>
@@ -59,20 +77,25 @@
   </section>
 
   <!-- =========================
-       DASHBOARD LAYER
+       DASHBOARD
   ========================== -->
   <section id="dashboard-layer" class="layer">
 
+    <!-- TOP BAR -->
     <header class="top-bar">
-      <div class="app-title">Assignments</div>
-      <button id="logout-btn">Logout</button>
+      <div class="top-left">
+        <div class="app-title">Assignments</div>
+        <div class="app-subtitle">Dashboard</div>
+      </div>
+
+      <button id="logout-btn" class="ghost-btn">Logout</button>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main id="app-view" class="content">
 
-      <!-- app.js가 여기 DOM 생성 -->
       <div class="empty-state">
-        Loading data...
+        Loading assignments...
       </div>
 
     </main>
@@ -80,18 +103,23 @@
   </section>
 
   <!-- =========================
-       MODAL LAYER
+       MODAL SYSTEM
   ========================== -->
   <div id="modal-layer" class="overlay"></div>
 
   <!-- =========================
-       TOAST LAYER
+       TOAST SYSTEM
   ========================== -->
-  <div id="toast-layer"></div>
+  <div id="toast-layer" class="toast-container"></div>
+
+  <!-- =========================
+       SAFE AREA FIX (iOS notch)
+  ========================== -->
+  <div class="safe-area-bottom"></div>
 
 </div>
 
-<!-- APP SCRIPT -->
+<!-- SCRIPT -->
 <script src="app.js" defer></script>
 
 </body>
