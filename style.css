@@ -1,10 +1,7 @@
 /* =========================
    1. DESIGN TOKENS
 ========================= */
-#app {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
+
 
 .status.red {
   color: #ff3b30;
@@ -42,6 +39,8 @@
 }
 
 html, body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
   margin: 0;
   padding: 0;
   height: 100%;
