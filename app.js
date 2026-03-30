@@ -33,6 +33,16 @@ const Store = {
 };
 
 // =========================
+// ENV CHECK (🔥 추가 핵심)
+// =========================
+function isStandalone() {
+  return (
+    window.navigator.standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches
+  );
+}
+
+// =========================
 // AUTH
 // =========================
 const Auth = {
@@ -108,7 +118,7 @@ const Data = {
 };
 
 // =========================
-// FILTER (🔥 핵심 추가)
+// FILTER
 // =========================
 const Filter = {
   apply(data) {
@@ -120,19 +130,13 @@ const Filter = {
           const diff = a.deadline - now;
           const days = diff / 86400000;
 
-          // ❌ 16일 이상 남은 과제 제거
           if (days > 16) return false;
-
-          // ❌ 마감 24시간 지난 과제 제거
           if (diff < -86400000) return false;
 
           return true;
         });
 
-        return {
-          ...course,
-          assignments
-        };
+        return { ...course, assignments };
       })
       .filter(c => c.assignments.length > 0);
   }
@@ -159,7 +163,6 @@ const Logic = {
     };
   },
 
-  // 남은 시간
   formatRemain(ms) {
     const d = Math.floor(ms / 86400000);
     const h = Math.floor((ms % 86400000) / 3600000);
@@ -168,7 +171,6 @@ const Logic = {
     return `${d}일 ${h}시간 ${m}분 남음`;
   },
 
-  // 🔥 경과 시간 (요구사항 반영: 일 제거)
   formatPassed(ms) {
     const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
@@ -190,6 +192,32 @@ const UI = {
     });
 
     layer.classList.add("active");
+  },
+
+  // =========================
+  // 🔥 브라우저 모드 화면 추가
+  // =========================
+  renderBrowserMode() {
+    const app = document.getElementById("app");
+
+    app.innerHTML = `
+      <div style="
+        height:100vh;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+        padding:20px;
+        font-family:sans-serif;
+      ">
+        <h2>Cyber Campus App</h2>
+        <p>이 앱은 홈 화면에 추가해서 사용해야 합니다.</p>
+        <p style="margin-top:10px;">
+          📱 Safari → 공유 → “홈 화면에 추가”
+        </p>
+      </div>
+    `;
   },
 
   renderLogin() {
@@ -288,6 +316,12 @@ const Notify = {
 // =========================
 const App = {
   async init() {
+    // 🔥 핵심: 웹앱 아닌 경우 차단 화면
+    if (!isStandalone()) {
+      UI.renderBrowserMode();
+      return;
+    }
+
     const token = Auth.getToken();
     State.token = token;
 
@@ -305,8 +339,6 @@ const App = {
 
     let data = Data.normalize(raw);
     data = Data.sort(data);
-
-    // 🔥 필터 적용 (핵심)
     data = Filter.apply(data);
 
     State.data = data;
