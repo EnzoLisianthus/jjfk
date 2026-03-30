@@ -1,0 +1,6 @@
+{
+  "name": "JJ 과제앱",
+  "short_name": "과제",
+  "start_url": ".",
+  "display": "standalone"
+}
