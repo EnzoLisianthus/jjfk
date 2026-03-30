@@ -244,6 +244,8 @@ html, body {
   margin-bottom: 10px;
   font-size: 14px;
   color: var(--muted);
+  width: 100%;
+  display: block;
 }
 
 .assignment-card {
