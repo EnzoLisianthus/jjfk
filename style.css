@@ -251,7 +251,7 @@ html, body {
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 10px;
-
+  width: 90%;
   backdrop-filter: blur(18px);
 
   transition: transform 0.2s var(--ease);
