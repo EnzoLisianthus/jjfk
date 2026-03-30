@@ -1,6 +1,9 @@
 // =========================
 // CONFIG
 // =========================
+window.addEventListener("DOMContentLoaded", () => {
+  App.init();
+});
 const BASE_URL = "https://cyber.jj.ac.kr/webservice/rest/server.php";
 const TOKEN_URL = "https://cyber.jj.ac.kr/login/token.php";
 
