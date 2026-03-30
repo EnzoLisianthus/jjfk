@@ -4,11 +4,12 @@
 window.addEventListener("DOMContentLoaded", () => {
   App.init();
 });
+
 const BASE_URL = "https://cyber.jj.ac.kr/webservice/rest/server.php";
 const TOKEN_URL = "https://cyber.jj.ac.kr/login/token.php";
 
 // =========================
-// STATE (핵심 추가)
+// STATE
 // =========================
 const State = {
   token: null,
@@ -107,6 +108,37 @@ const Data = {
 };
 
 // =========================
+// FILTER (🔥 핵심 추가)
+// =========================
+const Filter = {
+  apply(data) {
+    const now = Date.now();
+
+    return data
+      .map(course => {
+        const assignments = course.assignments.filter(a => {
+          const diff = a.deadline - now;
+          const days = diff / 86400000;
+
+          // ❌ 16일 이상 남은 과제 제거
+          if (days > 16) return false;
+
+          // ❌ 마감 24시간 지난 과제 제거
+          if (diff < -86400000) return false;
+
+          return true;
+        });
+
+        return {
+          ...course,
+          assignments
+        };
+      })
+      .filter(c => c.assignments.length > 0);
+  }
+};
+
+// =========================
 // LOGIC
 // =========================
 const Logic = {
@@ -116,55 +148,43 @@ const Logic = {
 
     if (diff < 0) {
       return {
-        color: "gray",
+        color: "red",
         text: this.formatPassed(-diff)
       };
     }
 
-    const days = diff / 86400000;
-
-    if (days < 3) {
-      return {
-        color: "orange",
-        text: this.formatRemain(diff)
-      };
-    }
-
     return {
-      color: "green",
+      color: diff < 3 * 86400000 ? "orange" : "green",
       text: this.formatRemain(diff)
     };
   },
 
+  // 남은 시간
   formatRemain(ms) {
     const d = Math.floor(ms / 86400000);
     const h = Math.floor((ms % 86400000) / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
+
     return `${d}일 ${h}시간 ${m}분 남음`;
   },
 
+  // 🔥 경과 시간 (요구사항 반영: 일 제거)
   formatPassed(ms) {
-    const d = Math.floor(ms / 86400000);
-    const h = Math.floor((ms % 86400000) / 3600000);
+    const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
-    return `마감 ${d}일 ${h}시간 ${m}분 경과`;
+
+    return `마감 ${h}시간 ${m}분 경과`;
   }
 };
 
 // =========================
-// UI (LAYER SYSTEM 기반)
+// UI
 // =========================
 const UI = {
   loginLayer: document.getElementById("login-layer"),
   dashboardLayer: document.getElementById("dashboard-layer"),
-  content: document.getElementById("content"),
 
   show(layer) {
-    if (!layer) {
-      console.error("layer 없음");
-      return;
-    }
-
     document.querySelectorAll(".layer").forEach(l => {
       l.classList.remove("active");
     });
@@ -204,10 +224,7 @@ const UI = {
   renderDashboard(data) {
     const view = document.getElementById("app-view");
 
-    if (!view) {
-      console.error("❌ app-view not found");
-      return;
-    }
+    if (!view) return;
 
     this.show(this.dashboardLayer);
 
@@ -285,6 +302,9 @@ const App = {
     let data = Data.normalize(raw);
     data = Data.sort(data);
 
+    // 🔥 필터 적용 (핵심)
+    data = Filter.apply(data);
+
     State.data = data;
 
     UI.renderDashboard(data);
@@ -305,8 +325,3 @@ const App = {
     UI.renderLogin();
   }
 };
-
-// =========================
-// START
-// =========================
-window.addEventListener("DOMContentLoaded", () => App.init());
