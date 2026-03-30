@@ -45,8 +45,6 @@
 }
 
 html, body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
   margin: 0;
   padding: 0;
   height: 100%;
@@ -69,7 +67,8 @@ html, body {
 #app {
   position: fixed;
   inset: 0;
-
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -216,7 +215,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
+  padding-top: calc(16px + env(safe-area-inset-top));
   padding: 16px 18px;
 }
 
