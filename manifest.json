@@ -1,6 +1,6 @@
 {
-  "name": "JJFK Assignment Manager",
-  "short_name": "JJFK",
+  "name": "JJFK 전주대 과제확인",
+  "short_name": "전주대 과제확인",
   "description": "과제 마감 관리 및 알림 PWA 시스템",
 
   "start_url": "./index.html",
