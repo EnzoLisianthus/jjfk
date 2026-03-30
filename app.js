@@ -5,6 +5,15 @@ const BASE_URL = "https://cyber.jj.ac.kr/webservice/rest/server.php";
 const TOKEN_URL = "https://cyber.jj.ac.kr/login/token.php";
 
 // =========================
+// STATE (핵심 추가)
+// =========================
+const State = {
+  token: null,
+  data: [],
+  interval: null
+};
+
+// =========================
 // STORE
 // =========================
 const Store = {
@@ -35,15 +44,20 @@ const Auth = {
 
     if (data.token) {
       Store.set("token", data.token);
+      State.token = data.token;
       return data.token;
-    } else {
-      throw new Error("로그인 실패");
     }
+
+    throw new Error("로그인 실패");
   },
 
   logout() {
     Store.remove("token");
-    location.reload();
+    State.token = null;
+
+    if (State.interval) clearInterval(State.interval);
+
+    App.showLogin();
   }
 };
 
@@ -66,18 +80,15 @@ const Data = {
     const result = [];
 
     raw.courses.forEach(course => {
-      if (!course.assignments || course.assignments.length === 0) return;
-
-      const assignments = course.assignments.map(a => ({
-        id: a.id,
-        title: a.name,
-        deadline: a.duedate * 1000,
-        submitted: false // 현재 API 한계
-      }));
+      if (!course.assignments?.length) return;
 
       result.push({
         courseName: course.fullname,
-        assignments
+        assignments: course.assignments.map(a => ({
+          id: a.id,
+          title: a.name,
+          deadline: a.duedate * 1000
+        }))
       });
     });
 
@@ -85,8 +96,8 @@ const Data = {
   },
 
   sort(data) {
-    data.forEach(course => {
-      course.assignments.sort((a, b) => a.deadline - b.deadline);
+    data.forEach(c => {
+      c.assignments.sort((a, b) => a.deadline - b.deadline);
     });
     return data;
   }
@@ -96,13 +107,12 @@ const Data = {
 // LOGIC
 // =========================
 const Logic = {
-  calcStatus(deadline, submitted) {
+  calcStatus(deadline) {
     const now = Date.now();
     const diff = deadline - now;
 
     if (diff < 0) {
       return {
-        status: "OVERDUE",
         color: "gray",
         text: this.formatPassed(-diff)
       };
@@ -112,14 +122,12 @@ const Logic = {
 
     if (days < 3) {
       return {
-        status: "DUE",
         color: "orange",
         text: this.formatRemain(diff)
       };
     }
 
     return {
-      status: "SAFE",
       color: "green",
       text: this.formatRemain(diff)
     };
@@ -136,21 +144,36 @@ const Logic = {
     const d = Math.floor(ms / 86400000);
     const h = Math.floor((ms % 86400000) / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
-    return `마감 후 ${d}일 ${h}시간 ${m}분 경과`;
+    return `마감 ${d}일 ${h}시간 ${m}분 경과`;
   }
 };
 
 // =========================
-// UI
+// UI (LAYER SYSTEM 기반)
 // =========================
 const UI = {
+  loginLayer: document.getElementById("login-layer"),
+  dashboardLayer: document.getElementById("dashboard-layer"),
+  content: document.getElementById("content"),
+
+  show(layer) {
+    document.querySelectorAll(".layer").forEach(l => l.classList.remove("active"));
+    layer.classList.add("active");
+  },
+
   renderLogin() {
-    document.body.innerHTML = `
-      <div style="padding:20px;">
-        <h2>로그인</h2>
-        <input id="id" placeholder="학번"><br><br>
-        <input id="pw" type="password" placeholder="비밀번호"><br><br>
-        <button id="loginBtn">로그인</button>
+    this.show(this.loginLayer);
+
+    this.loginLayer.innerHTML = `
+      <div class="auth-container">
+        <div class="auth-card">
+          <div class="title">로그인</div>
+
+          <input id="id" placeholder="학번" />
+          <input id="pw" type="password" placeholder="비밀번호" />
+
+          <button id="loginBtn">로그인</button>
+        </div>
       </div>
     `;
 
@@ -167,32 +190,32 @@ const UI = {
     };
   },
 
-  render(data) {
-    let html = `<div class="container"><h2>📚 과제 현황</h2>`;
+  renderDashboard(data) {
+    this.show(this.dashboardLayer);
+
+    let html = "";
 
     data.forEach(course => {
-      html += `<div class="card"><div class="course">${course.courseName}</div>`;
+      html += `<div class="course">${course.courseName}</div>`;
 
       course.assignments.forEach(a => {
-        const s = Logic.calcStatus(a.deadline, a.submitted);
+        const s = Logic.calcStatus(a.deadline);
 
         html += `
-          <div class="assignment">
+          <div class="assignment-card">
             <div class="title">${a.title}</div>
-            <div class="deadline">마감: ${new Date(a.deadline).toLocaleString()}</div>
-            <div class="status ${s.color}">${s.text}</div>
-            <div class="submitted ${a.submitted ? "blue" : "red"}">
-              ${a.submitted ? "제출 완료" : "미제출"}
+            <div class="deadline">
+              ${new Date(a.deadline).toLocaleString()}
+            </div>
+            <div class="status ${s.color}">
+              ${s.text}
             </div>
           </div>
         `;
       });
-
-      html += `</div>`;
     });
 
-    html += `</div>`;
-    document.body.innerHTML = html;
+    this.content.innerHTML = html;
   }
 };
 
@@ -200,19 +223,19 @@ const UI = {
 // NOTIFY
 // =========================
 const Notify = {
-  async requestPermission() {
+  async request() {
     if (Notification.permission !== "granted") {
       await Notification.requestPermission();
     }
   },
 
   check(data) {
-    data.forEach(course => {
-      course.assignments.forEach(a => {
+    data.forEach(c => {
+      c.assignments.forEach(a => {
         const diff = a.deadline - Date.now();
 
-        if (!a.submitted && diff > 0 && diff < 3600000) {
-          this.send(`1시간 이하: ${a.title}`);
+        if (diff > 0 && diff < 3600000) {
+          this.send(`⏰ 1시간 남음: ${a.title}`);
         }
       });
     });
@@ -226,42 +249,46 @@ const Notify = {
 };
 
 // =========================
-// APP
+// APP CONTROLLER
 // =========================
 const App = {
   async init() {
     const token = Auth.getToken();
+    State.token = token;
 
     if (!token) {
       UI.renderLogin();
       return;
     }
 
-    try {
-      const raw = await API.fetchAssignments(token);
+    await this.load();
+    this.startAutoRefresh();
+  },
 
-      let data = Data.normalize(raw);
-      data = Data.sort(data);
+  async load() {
+    const raw = await API.fetchAssignments(State.token);
 
-      UI.render(data);
+    let data = Data.normalize(raw);
+    data = Data.sort(data);
 
-      await Notify.requestPermission();
-      Notify.check(data);
+    State.data = data;
 
-      // 자동 갱신 (1분)
-      setInterval(async () => {
-        const raw = await API.fetchAssignments(token);
-        let data = Data.normalize(raw);
-        data = Data.sort(data);
+    UI.renderDashboard(data);
 
-        UI.render(data);
-        Notify.check(data);
-      }, 60000);
+    await Notify.request();
+    Notify.check(data);
+  },
 
-    } catch (e) {
-      console.error(e);
-      Auth.logout();
-    }
+  startAutoRefresh() {
+    if (State.interval) clearInterval(State.interval);
+
+    State.interval = setInterval(() => {
+      this.load();
+    }, 60000);
+  },
+
+  showLogin() {
+    UI.renderLogin();
   }
 };
 
