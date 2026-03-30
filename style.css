@@ -1,6 +1,12 @@
 /* =========================
    1. DESIGN TOKENS
 ========================= */
+#app {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+
 :root {
   --bg: #0b0f1a;
   --card: rgba(255, 255, 255, 0.06);
