@@ -309,3 +309,4 @@ const App = {
 // =========================
 // START
 // =========================
+window.addEventListener("DOMContentLoaded", () => App.init());
