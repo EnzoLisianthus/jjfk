@@ -1,7 +1,7 @@
 # 📚 Assignment Hub (PWA)
 
 Moodle 기반 과제 정보를 모바일 환경에서 빠르게 확인할 수 있는 PWA 웹앱입니다.
-별도의 서버 없이 **클라이언트(JavaScript)만으로 동작**하며, GitHub Pages에 배포 가능합니다.
+별도의 서버 없이 **클라이언트(JavaScript)만으로 동작**하며, ***향후재배포를 금합니다.***
 
 ---
 
