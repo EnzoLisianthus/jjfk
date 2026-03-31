@@ -214,7 +214,7 @@ const UI = {
         <h2>Cyber Campus App</h2>
         <p>이 앱은 홈 화면에 추가해서 사용해야 합니다.</p>
         <p style="margin-top:10px;">
-          📱 Safari → 공유 → “홈 화면에 추가”
+          Safari에서 열기 → 공유 → “홈 화면에 추가”
         </p>
       </div>
     `;
