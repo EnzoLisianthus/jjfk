@@ -93,26 +93,6 @@ mod_assign_get_assignments
 
 ---
 
-## 📦 설치 및 실행
-
-### 로컬 실행
-
-```bash
-git clone <repository>
-cd project
-```
-
-이후 `index.html` 파일 실행
-
----
-
-### GitHub Pages 배포
-
-1. 레포지토리 업로드
-2. Settings → Pages 이동
-3. Branch: `main` / root 설정
-
----
 
 ## 📱 PWA 사용 방법
 
