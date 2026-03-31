@@ -1,5 +1,4 @@
-## 📚 Assignment Hub (PWA)
-# 전주대 과제확인 app
+# 📚 Assignment Hub (PWA)
 Moodle 기반 전주대학교의 과제 정보를 모바일 환경에서 빠르게 확인할 수 있는 PWA 웹앱입니다.
 별도의 서버 없이 **클라이언트(JavaScript)만으로 동작**하며
 
