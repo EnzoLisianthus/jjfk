@@ -336,7 +336,14 @@ const App = {
 
   async load() {
     const raw = await API.fetchAssignments(State.token);
-
+    
+    if (raw.errorcode) {
+      localStorage.removeItem("token");
+      alert("세션 만료됨. 다시 로그인하세요.");
+      UI.renderLogin();
+      return;
+    }
+    
     let data = Data.normalize(raw);
     data = Data.sort(data);
     data = Filter.apply(data);
