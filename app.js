@@ -352,8 +352,8 @@ const App = {
 
     UI.renderDashboard(data);
 
-    await Notify.request();
-    Notify.check(data);
+    //await Notify.request();
+    //Notify.check(data);
   },
 
   startAutoRefresh() {
