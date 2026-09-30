@@ -1,23 +1,16 @@
 {
   "name": "JJFK 전주대 과제확인",
   "short_name": "전주대 과제확인",
-  "description": "과제 마감 관리 및 알림 PWA 시스템",
-
-  "start_url": "./index.html",
+  "description": "새로운 JJFK 버전 설치 안내",
+  "start_url": "./index.html?migration=20260930",
   "scope": "./",
-
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
-
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-
+  "display_override": ["standalone"],
+  "background_color": "#0d0e12",
+  "theme_color": "#111217",
   "orientation": "portrait-primary",
-
   "lang": "ko-KR",
-
   "categories": ["productivity", "education"],
-
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -38,21 +31,5 @@
       "purpose": "maskable"
     }
   ],
-
-  "shortcuts": [
-    {
-      "name": "과제 목록",
-      "short_name": "목록",
-      "url": "./index.html#tasks",
-      "description": "전체 과제 리스트 확인"
-    },
-    {
-      "name": "마감 임박",
-      "short_name": "임박",
-      "url": "./index.html#urgent",
-      "description": "마감이 가까운 과제"
-    }
-  ],
-
   "prefer_related_applications": false
 }

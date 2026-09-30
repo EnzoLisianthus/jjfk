@@ -1,221 +1,159 @@
-// ===============================
-// JJFK PWA Service Worker (FINAL)
-// ===============================
+/* ==========================================================
+   JJFK v1 -> New JJFK Migration Service Worker
 
-const CACHE_NAME = "jjfk-cache-v2";
-const NOTI_KEY = "notified-tasks";
+   목적:
+   - 기존 jjfk-cache-v2 등 예전 캐시 제거
+   - 기존 홈 화면 PWA를 migration 안내 화면으로 전환
+   - navigation은 항상 네트워크 최신 index.html을 우선 사용
+   ========================================================== */
 
-const STATIC_ASSETS = [
-  "./",
-  "./index.html",
-  "./app.js",
-  "./style.css",
-  "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
-];
+const MIGRATION_CACHE = "jjfk-migration-20260930-v1";
+const MIGRATION_URL = "./index.html?migration=20260930";
+const FALLBACK_KEY = "./index.html";
 
-// ===============================
-// INSTALL
-// ===============================
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    (async () => {
+      const cache = await caches.open(MIGRATION_CACHE);
+
+      try {
+        const response = await fetch(MIGRATION_URL, {
+          cache: "reload"
+        });
+
+        if (response.ok) {
+          await cache.put(FALLBACK_KEY, response.clone());
+        }
+      } catch {
+        // 네트워크가 없는 설치 시에는 activate 이후 기존 캐시를
+        // 무조건 지우지 않도록 fallback 존재 여부를 확인합니다.
+      }
+
+      await self.skipWaiting();
+    })()
   );
 });
 
-// ===============================
-// ACTIVATE
-// ===============================
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
-        })
-      )
-    )
-  );
+    (async () => {
+      const migrationCache = await caches.open(MIGRATION_CACHE);
+      const migrationFallback = await migrationCache.match(FALLBACK_KEY);
 
-  self.clients.claim();
+      /*
+       * 새 안내 화면을 실제로 확보한 경우에만 과거 JJFK 캐시를 지웁니다.
+       * 네트워크 단절 중 업데이트가 걸려도 기존 앱 캐시를 먼저 날려
+       * 빈 화면이 되는 상황을 피합니다.
+       */
+      if (migrationFallback) {
+        const cacheNames = await caches.keys();
+
+        await Promise.all(
+          cacheNames.map((name) => {
+            if (name === MIGRATION_CACHE) return Promise.resolve(false);
+
+            if (
+              name.startsWith("jjfk-cache-") ||
+              name.startsWith("jjfk-migration-")
+            ) {
+              return caches.delete(name);
+            }
+
+            return Promise.resolve(false);
+          })
+        );
+      }
+
+      await self.clients.claim();
+
+      /*
+       * 이미 켜져 있는 구버전 PWA도 새 SW가 활성화되면
+       * 가능한 경우 즉시 migration 화면으로 이동시킵니다.
+       */
+      if (migrationFallback) {
+        const windows = await self.clients.matchAll({
+          type: "window",
+          includeUncontrolled: true
+        });
+
+        const target = new URL(MIGRATION_URL, self.registration.scope).href;
+
+        await Promise.all(
+          windows.map(async (client) => {
+            try {
+              await client.navigate(target);
+            } catch {
+              // iOS가 현재 navigation을 허용하지 않으면
+              // 다음 실행/새로고침부터 migration 화면이 표시됩니다.
+            }
+          })
+        );
+      }
+    })()
+  );
 });
 
-// ===============================
-// FETCH
-// ===============================
 self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
+  const request = event.request;
 
-  if (url.pathname.includes("/api/")) {
-    event.respondWith(networkFirst(req));
+  if (request.method !== "GET") return;
+
+  const requestUrl = new URL(request.url);
+  const scopeUrl = new URL(self.registration.scope);
+
+  /* Moodle 등 cross-origin 요청은 건드리지 않습니다. */
+  if (requestUrl.origin !== scopeUrl.origin) return;
+
+  /*
+   * 설치된 PWA를 실행하거나 페이지를 이동할 때마다
+   * migration index.html을 네트워크에서 가장 먼저 확인합니다.
+   */
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstMigration());
     return;
   }
 
-  event.respondWith(cacheFirst(req));
+  /* manifest/icons 같은 정적 파일은 일반 네트워크 요청으로 둡니다. */
 });
 
-// ===============================
-// CACHE STRATEGIES
-// ===============================
-async function cacheFirst(req) {
-  const cached = await caches.match(req);
-  if (cached) return cached;
+async function networkFirstMigration() {
+  const cache = await caches.open(MIGRATION_CACHE);
 
-  const res = await fetch(req);
-  const cache = await caches.open(CACHE_NAME);
-  cache.put(req, res.clone());
-
-  return res;
-}
-
-async function networkFirst(req) {
   try {
-    const res = await fetch(req);
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(req, res.clone());
-    return res;
+    const response = await fetch(MIGRATION_URL, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    await cache.put(FALLBACK_KEY, response.clone());
+    return response;
   } catch {
-    const cached = await caches.match(req);
-    return cached || new Response("offline", { status: 503 });
+    const cached = await cache.match(FALLBACK_KEY);
+
+    if (cached) return cached;
+
+    return new Response(
+      `<!doctype html>
+       <html lang="ko">
+       <meta charset="utf-8">
+       <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+       <body style="margin:0;background:#0d0e12;color:white;font-family:-apple-system,sans-serif;display:grid;place-items:center;min-height:100vh;padding:24px;text-align:center;box-sizing:border-box">
+         <div>
+           <h2>JJFK 업데이트 안내</h2>
+           <p style="color:#aaa;line-height:1.6">안내 화면을 불러오려면 인터넷 연결이 필요합니다.<br>연결 후 앱을 다시 열어주세요.</p>
+         </div>
+       </body>
+       </html>`,
+      {
+        status: 503,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store"
+        }
+      }
+    );
   }
 }
-
-// ===============================
-// MESSAGE
-// ===============================
-self.addEventListener("message", async (event) => {
-  const data = event.data;
-  if (!data || !data.type) return;
-
-  switch (data.type) {
-    case "SAVE_TASKS":
-      await saveToCache("tasks", data.payload);
-      break;
-
-    case "GET_TASKS":
-      const tasks = await getFromCache("tasks");
-      event.ports[0]?.postMessage(tasks || []);
-      break;
-
-    case "CHECK_DEADLINES":
-      await checkDeadlines(data.payload);
-      break;
-  }
-});
-
-// ===============================
-// CACHE HELPERS
-// ===============================
-async function saveToCache(key, data) {
-  const cache = await caches.open(CACHE_NAME);
-  await cache.put(`data-${key}`, new Response(JSON.stringify(data)));
-}
-
-async function getFromCache(key) {
-  const cache = await caches.open(CACHE_NAME);
-  const res = await cache.match(`data-${key}`);
-  return res ? await res.json() : null;
-}
-
-// ===============================
-// 🔥 NOTIFICATION STATE STORAGE
-// ===============================
-async function getNotiState() {
-  const cache = await caches.open(CACHE_NAME);
-  const res = await cache.match(NOTI_KEY);
-  return res ? await res.json() : {};
-}
-
-async function setNotiState(data) {
-  const cache = await caches.open(CACHE_NAME);
-  await cache.put(NOTI_KEY, new Response(JSON.stringify(data)));
-}
-
-// ===============================
-// 🔥 NOTIFICATION SYSTEM (FINAL)
-// ===============================
-async function checkDeadlines(tasks) {
-  if (!tasks || !Array.isArray(tasks)) return;
-
-  const now = Date.now();
-  const notiState = await getNotiState();
-
-  for (const task of tasks) {
-    if (!task.deadline || !task.id) continue;
-
-    const deadline = new Date(task.deadline).getTime();
-    const diff = deadline - now;
-
-    if (!notiState[task.id]) {
-      notiState[task.id] = {
-        before4h: false,
-        deadline: false,
-        expiredAt: null
-      };
-    }
-
-    const state = notiState[task.id];
-
-    // =========================
-    // ⏰ 4시간 전 (1회)
-    // =========================
-    if (
-      diff > 0 &&
-      diff <= 4 * 60 * 60 * 1000 &&
-      !state.before4h
-    ) {
-      self.registration.showNotification("⏰ 마감 4시간 전", {
-        body: task.title || "과제 마감 4시간 전입니다.",
-        icon: "./icons/icon-192.png",
-        badge: "./icons/icon-192.png"
-      });
-
-      state.before4h = true;
-    }
-
-    // =========================
-    // 🚨 마감 (1회)
-    // =========================
-    if (diff <= 0 && !state.deadline) {
-      self.registration.showNotification("🚨 마감 완료", {
-        body: task.title || "과제가 마감되었습니다.",
-        icon: "./icons/icon-192.png",
-        badge: "./icons/icon-192.png"
-      });
-
-      state.deadline = true;
-      state.expiredAt = now;
-    }
-
-    // =========================
-    // 🧹 24시간 후 삭제
-    // =========================
-    if (
-      state.expiredAt &&
-      now - state.expiredAt > 24 * 60 * 60 * 1000
-    ) {
-      delete notiState[task.id];
-    }
-  }
-
-  await setNotiState(notiState);
-}
-
-// ===============================
-// PUSH (확장)
-// ===============================
-self.addEventListener("push", (event) => {
-  const data = event.data ? event.data.json() : {};
-
-  self.registration.showNotification(data.title || "알림", {
-    body: data.body || "",
-    icon: "./icons/icon-192.png"
-  });
-});

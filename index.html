@@ -1,125 +1,413 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <!-- =========================
-       MOBILE OPTIMIZATION (핵심)
-  ========================== -->
-  <meta name="viewport"
-        content="width=device-width,
-                 initial-scale=1,
-                 maximum-scale=1,
-                 user-scalable=no,
-                 viewport-fit=cover">
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  >
 
-  <meta name="theme-color" content="#0b0f1a" />
+  <meta name="theme-color" content="#111217">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="전주대 과제확인">
 
-  <!-- iOS PWA -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Assignment Hub" />
+  <link rel="manifest" href="manifest.json?migration=1">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
+  <title>JJFK 업데이트 안내</title>
 
-  <title>Assignment Hub</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0e12;
+      --bg-soft: #15171d;
+      --text: rgba(255, 255, 255, .95);
+      --muted: rgba(235, 236, 240, .62);
+      --faint: rgba(235, 236, 240, .40);
+      --border: rgba(255, 255, 255, .13);
+      --surface-top: rgba(255, 255, 255, .105);
+      --surface-bottom: rgba(255, 255, 255, .045);
+      --button: #f3f3f5;
+      --button-text: #131419;
+      --accent: #9ba9c8;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+    }
 
-  <link rel="stylesheet" href="style.css" />
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    .page {
+      position: relative;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding:
+        calc(env(safe-area-inset-top) + 28px)
+        20px
+        calc(env(safe-area-inset-bottom) + 28px);
+      isolation: isolate;
+    }
+
+    .page::before,
+    .page::after {
+      content: "";
+      position: fixed;
+      z-index: -2;
+      pointer-events: none;
+      border-radius: 999px;
+      filter: blur(10px);
+    }
+
+    .page::before {
+      width: 380px;
+      height: 380px;
+      top: -170px;
+      left: -180px;
+      background: rgba(121, 132, 158, .11);
+    }
+
+    .page::after {
+      width: 360px;
+      height: 360px;
+      right: -190px;
+      bottom: -170px;
+      background: rgba(117, 105, 128, .08);
+    }
+
+    .card {
+      position: relative;
+      width: min(100%, 430px);
+      overflow: hidden;
+      padding: 28px 24px 22px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: linear-gradient(155deg, var(--surface-top), var(--surface-bottom));
+      -webkit-backdrop-filter: blur(24px) saturate(120%);
+      backdrop-filter: blur(24px) saturate(120%);
+      box-shadow:
+        0 24px 70px rgba(0, 0, 0, .32),
+        inset 0 1px 0 rgba(255, 255, 255, .15);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(145deg, rgba(255, 255, 255, .12), transparent 35%);
+      opacity: .72;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(27px, 7.5vw, 34px);
+      line-height: 1.18;
+      letter-spacing: -.045em;
+      font-weight: 760;
+    }
+
+    .message {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.68;
+      word-break: keep-all;
+    }
+
+    .message strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .install-guide {
+      margin: 25px 0 20px;
+      padding: 17px 17px 16px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 18px;
+      background: rgba(0, 0, 0, .13);
+    }
+
+    .install-guide-title {
+      margin-bottom: 11px;
+      color: rgba(255, 255, 255, .82);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      align-items: start;
+      gap: 8px;
+    }
+
+    .step-number {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .085);
+      color: rgba(255, 255, 255, .84);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .primary-button {
+      appearance: none;
+      width: 100%;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      background: var(--button);
+      color: var(--button-text);
+      text-decoration: none;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .16s var(--ease), opacity .16s var(--ease);
+    }
+
+    .primary-button:active {
+      transform: scale(.975);
+      opacity: .87;
+    }
+
+    .primary-button[aria-disabled="true"] {
+      opacity: .38;
+      cursor: default;
+    }
+
+    .hint {
+      margin: 13px 5px 0;
+      color: var(--faint);
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.55;
+      word-break: keep-all;
+    }
+
+    .config-warning {
+      display: none;
+      margin-top: 12px;
+      padding: 11px 13px;
+      border: 1px solid rgba(255, 173, 73, .18);
+      border-radius: 13px;
+      background: rgba(255, 173, 73, .07);
+      color: rgba(255, 202, 137, .88);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .config-warning.visible {
+      display: block;
+    }
+
+    @media (max-width: 380px) {
+      .page {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .card {
+        padding: 24px 19px 19px;
+        border-radius: 24px;
+      }
+
+      .message {
+        font-size: 15px;
+      }
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      .card {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: #191a20;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <main class="page">
+    <section class="card" aria-labelledby="migration-title">
+      <div class="content">
+        <div class="eyebrow">JJFK · NEW VERSION</div>
 
-<!-- =========================
-     APP ROOT
-========================== -->
-<div id="app">
+        <h1 id="migration-title">새로운 버전이 출시되었습니다.</h1>
 
-  <!-- =========================
-       LOADING
-  ========================== -->
-  <section id="loading-layer" class="layer active">
-    <div class="center">
-      <div class="spinner"></div>
-      <div class="text">Loading</div>
-    </div>
-  </section>
+        <p class="message">
+          <strong>그동안 사용해주셔서 감사합니다.🙇‍♂️</strong><br>
+          개선된 버전이 출시되었으니 새로 설치해주시기 바랍니다.
+        </p>
 
-  <!-- =========================
-       LOGIN
-  ========================== -->
-  <section id="login-layer" class="layer">
-
-    <div class="auth-container">
-
-      <div class="auth-card">
-
-        <div class="auth-header">
-          <div class="auth-title">Welcome</div>
-          <div class="auth-subtitle">Assignment Hub</div>
+        <div class="install-guide">
+          <div class="install-guide-title">새 버전 설치 방법</div>
+          <ol class="steps">
+            <li class="step">
+              <span class="step-number">1</span>
+              <span>아래 버튼을 눌러 새 버전을 Safari에서 엽니다.</span>
+            </li>
+            <li class="step">
+              <span class="step-number">2</span>
+              <span>Safari의 <b>공유</b> 버튼을 누릅니다.</span>
+            </li>
+            <li class="step">
+              <span class="step-number">3</span>
+              <span><b>홈 화면에 추가</b>를 선택해 새 버전을 설치합니다.</span>
+            </li>
+          </ol>
         </div>
 
-        <div class="auth-form">
-          <input id="login-id" type="text" placeholder="Student ID" />
-          <input id="login-pw" type="password" placeholder="Password" />
+        <a
+          id="open-new-app"
+          class="primary-button"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer external"
+        >
+          새 버전 Safari에서 열기
+          <span aria-hidden="true">↗</span>
+        </a>
+
+        <div id="config-warning" class="config-warning" role="status">
+          새 버전 주소가 아직 설정되지 않았습니다.
         </div>
 
-        <button id="login-btn" class="primary-btn">Login</button>
-
-        <div class="auth-hint">
-          Cyber Campus System
+        <div class="hint">
+          iOS에서는 웹페이지가 “홈 화면에 추가”를 자동 실행할 수 없어,<br>
+          Safari에서 공유 → 홈 화면에 추가를 한 번 눌러주셔야 합니다.
         </div>
-
       </div>
+    </section>
+  </main>
 
-    </div>
+  <script>
+    /* ============================================================
+       새 JJFK 주소를 설정할 곳은 아래 한 줄뿐입니다.
+       예: const NEW_APP_URL = "https://example.com/new-jjfk/";
+       ============================================================ */
+    const NEW_APP_URL = "https://enzolisianthus.github.io/devingjjfk/index.html";
 
-  </section>
+    const openButton = document.getElementById("open-new-app");
+    const configWarning = document.getElementById("config-warning");
 
-  <!-- =========================
-       DASHBOARD
-  ========================== -->
-  <section id="dashboard-layer" class="layer">
+    function getConfiguredUrl() {
+      const value = String(NEW_APP_URL || "").trim();
+      if (!value) return null;
 
-    <!-- TOP BAR -->
-    <header class="top-bar">
-      <div class="top-left">
-        <div class="app-title">전주대 과제확인</div>
-        <div class="app-subtitle">만든놈:daxun</div>
-      </div>
+      try {
+        const url = new URL(value, window.location.href);
+        if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+        return url.href;
+      } catch {
+        return null;
+      }
+    }
 
-      <button id="logout-btn" class="ghost-btn"></button>
-    </header>
+    const configuredUrl = getConfiguredUrl();
 
-    <!-- MAIN CONTENT -->
-    <main id="app-view" class="content">
+    if (configuredUrl) {
+      openButton.href = configuredUrl;
 
-      <div class="empty-state">
-        Loading assignments...
-      </div>
+      openButton.addEventListener("click", (event) => {
+        /*
+         * iOS Standalone PWA에서 외부/스코프 밖 URL을 _blank로 열면
+         * Safari로 넘겨지는 동작을 사용합니다.
+         */
+        event.preventDefault();
 
-    </main>
+        const anchor = document.createElement("a");
+        anchor.href = configuredUrl;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer external";
+        anchor.style.display = "none";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      });
+    } else {
+      openButton.setAttribute("aria-disabled", "true");
+      configWarning.classList.add("visible");
 
-  </section>
+      openButton.addEventListener("click", (event) => {
+        event.preventDefault();
+      });
+    }
 
-  <!-- =========================
-       MODAL SYSTEM
-  ========================== -->
-  <div id="modal-layer" class="overlay"></div>
+    /*
+     * 기존 설치 사용자의 오래된 cache-first Service Worker를
+     * 가능한 한 빨리 migration 전용 Service Worker로 교체합니다.
+     */
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        try {
+          const registration = await navigator.serviceWorker.register(
+            "./service-worker.js",
+            {
+              scope: "./",
+              updateViaCache: "none"
+            }
+          );
 
-  <!-- =========================
-       TOAST SYSTEM
-  ========================== -->
-  <div id="toast-layer" class="toast-container"></div>
-
-  <!-- =========================
-       SAFE AREA FIX (iOS notch)
-  ========================== -->
-  <div class="safe-area-bottom"></div>
-
-</div>
-
-<!-- SCRIPT -->
-<script src="app.js?v=2" defer></script>
-
+          await registration.update().catch(() => {});
+        } catch {
+          // 안내 화면 자체는 Service Worker가 없어도 정상 동작합니다.
+        }
+      });
+    }
+  </script>
 </body>
 </html>

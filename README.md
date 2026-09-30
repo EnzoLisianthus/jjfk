@@ -1,132 +1,39 @@
-# 📚 Assignment Hub (PWA)
-Moodle 기반 전주대학교의 과제 정보를 모바일 환경에서 빠르게 확인할 수 있는 PWA 웹앱입니다.
-별도의 서버 없이 **클라이언트(JavaScript)만으로 동작**하며
+# JJFK v1 Migration Shell
 
-```diff
-- **향후 본 프로젝트의 무단 재배포를 금지합니다.**
-```
----
+이 저장소는 기존 JJFK v1 설치 사용자를 새로운 JJFK로 안내하기 위한 migration 전용 버전입니다.
 
-## 🚀 주요 기능
+## 새 버전 URL 설정
 
-* 🔐 Moodle 토큰 기반 로그인
-* 📋 전체 과제 자동 조회 (API)
-* ⏳ 마감 임박 / 종료 상태 자동 계산
-* 🎯 16일 이내 과제만 필터링
-* 📱 모바일 최적화 UI
-* 📦 PWA 지원 (홈 화면 추가, 앱처럼 실행)
-* 🔄 앱 실행 시 최신 과제 자동 반영
+`index.html`에서 아래 한 줄만 수정하세요.
 
----
-
-## 🧱 프로젝트 구조
-
-```
-.
-├── index.html          # 메인 UI
-├── style.css           # 스타일
-├── app.js              # 핵심 로직
-├── manifest.json       # PWA 설정
-├── service-worker.js   # 캐싱 및 오프라인 처리
-└── icons/              # 앱 아이콘
+```js
+const NEW_APP_URL = "";
 ```
 
----
+예:
 
-## ⚙️ 동작 방식
-
-### 1. 로그인
-
-* 사용자 ID / 비밀번호 입력
-* Moodle `token.php` API 호출
-* 토큰을 `localStorage`에 저장
-
-### 2. 데이터 로드
-
-* 저장된 토큰으로 과제 API 호출
-* `mod_assign_get_assignments` 사용
-
-### 3. 데이터 처리
-
-* 과목별 과제 정리
-* 마감일 기준 정렬
-* 필터 조건 적용:
-
-  * 16일 초과 과제 제외
-  * 일정 이상 지난 과제 제외
-
-### 4. 상태 계산
-
-* 남은 시간 기준 색상 표시
-
-  * 초록: 여유 있음
-  * 주황: 마감 임박
-  * 빨강: 마감 초과
-
-### 5. UI 렌더링
-
-* 과목별 카드 생성
-* 과제 리스트 출력
-
----
-
-## 🔗 사용 API
-
-### 토큰 발급
-
-```
-https://cyber.jj.ac.kr/login/token.php
+```js
+const NEW_APP_URL = "https://example.com/new-jjfk/";
 ```
 
-### 과제 조회
+가능하면 **기존 PWA의 scope 밖에 있는 HTTPS URL**을 사용하세요. iOS Standalone PWA에서 버튼은 `_blank` 외부 링크로 열리도록 되어 있어, 새 주소가 기존 scope 밖이면 Safari로 전달되는 동작이 가장 안정적입니다.
 
-```
-https://cyber.jj.ac.kr/webservice/rest/server.php
-```
+## 기존 설치 사용자 갱신
 
-### 사용 함수
+새 `service-worker.js`는:
 
-```
-mod_assign_get_assignments
-```
+- `jjfk-cache-*` 계열의 기존 캐시를 제거합니다.
+- 새 migration 화면을 확보한 후에만 기존 캐시를 삭제합니다.
+- `skipWaiting()` + `clients.claim()`으로 새 SW를 빠르게 활성화합니다.
+- 이미 열려 있는 구버전 창도 가능한 경우 migration URL로 이동시킵니다.
+- 이후 navigation은 network-first로 새 `index.html`을 우선 확인합니다.
 
----
+브라우저/iOS의 Service Worker 업데이트 확인 시점 때문에 **오프라인 상태나 OS가 업데이트 확인을 아직 수행하지 않은 순간까지 100% 즉시 강제할 수는 없습니다.** 하지만 사용자가 온라인 상태에서 기존 PWA를 다시 실행하면 새 SW가 감지되는 즉시 안내 화면으로 전환되도록 구성되어 있습니다.
 
+## 홈 화면 설치 유도
 
-## 📱 PWA 사용 방법
+iOS 웹에서는 `홈 화면에 추가`를 JavaScript로 직접 실행하는 공개 API가 없습니다. 따라서 안내 화면에 다음 절차를 표시합니다.
 
-1. 사이트 접속
-2. 브라우저 메뉴 → "홈 화면에 추가"
-3. 앱처럼 실행 가능
-
----
-
-## 🔒 데이터 저장
-
-* 토큰: `localStorage`
-* 서버 저장 없음
-* 모든 데이터는 클라이언트에서 처리
-
----
-
-## ⚠️ 주의사항
-
-* 계정 정보는 브라우저 내에서만 사용됨
-* 공용 PC 사용 시 토큰 삭제 필요
-* Moodle API 변경 시 동작 오류 발생 가능
-
----
-
-## 🧠 설계 특징
-
-* 서버 없이 동작하는 완전 프론트엔드 구조
-* PWA 기반 모바일 앱 대체
-* API 기반 실시간 데이터 반영
-* 빠른 로딩과 단순한 UI 구조
-
----
-
-
-## 📄 License
-
-MIT License
+1. 새 버전을 Safari에서 열기
+2. 공유 버튼
+3. 홈 화면에 추가
